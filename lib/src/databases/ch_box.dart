@@ -29,21 +29,39 @@ class ChBox<T> extends ChBoxInterfaces<T> {
   }
 
   @override
-  Future<void> addAll(List<T> values) {
-    // TODO: implement addAll
-    throw UnimplementedError();
+  Future<void> addAll(List<T> values) async {
+    for (var value in values) {
+      final id = _indexDB.generatedId;
+      final map = _adapter.setId(id, _adapter.toMap(value));
+      await _indexDB.add(
+        ChapterRecord(
+          id: id,
+          adapterId: _adapter.getAdapterId,
+          parentId: _adapter.getParentId,
+          langCode: _adapter.getLangCode(value),
+          chapter: _adapter.getChapter(value),
+          data: _adapter.encodeData(_adapter.toJson(map)),
+        ),
+        callFlush: false,
+      );
+    }
+
+    await _indexDB.writeFlush();
   }
 
   @override
-  Future<void> deleteAll(List<int> idList) {
-    // TODO: implement deleteAll
-    throw UnimplementedError();
+  Future<void> deleteAll(List<int> idList) async {
+    await _indexDB.deleteMultiple(idList);
   }
 
   @override
-  Future<bool> deleteById(int id) {
-    // TODO: implement deleteById
-    throw UnimplementedError();
+  Future<bool> deleteById(int id) async {
+    try {
+      await _indexDB.deleteById(id);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   @override
@@ -59,21 +77,33 @@ class ChBox<T> extends ChBoxInterfaces<T> {
   }
 
   @override
-  Stream<T> getAllStream({int? parentId, int? langCode}) {
-    // TODO: implement getAllStream
-    throw UnimplementedError();
+  Stream<T> getAllStream({int? parentId, int? langCode}) async* {
+    for (var meta in _indexDB.getAll(parentId: parentId, langCode: langCode)) {
+      final data = await meta.readData(_indexDB.readRaf);
+      final map = _adapter.fromJson(_adapter.decodeData(data));
+      final value = _adapter.fromMap(_adapter.setId(meta.id, map));
+      yield value;
+    }
   }
 
   @override
-  Future<T?> getOne(bool Function(T value) test) {
-    // TODO: implement getOne
-    throw UnimplementedError();
+  Future<T?> getOne(bool Function(T value) test) async {
+    for (var value in await getAll()) {
+      if (test(value)) {
+        return value;
+      }
+    }
+    return null;
   }
 
   @override
-  Stream<T?> getOneStream(bool Function(T value) test) {
-    // TODO: implement getOneStream
-    throw UnimplementedError();
+  Stream<T?> getOneStream(bool Function(T value) test) async* {
+    await for (var value in getAllStream()) {
+      if (test(value)) {
+        yield value;
+      }
+    }
+    yield null;
   }
 
   @override
@@ -81,15 +111,25 @@ class ChBox<T> extends ChBoxInterfaces<T> {
     bool Function(T value) test, {
     int? parentId,
     int? langCode,
-  }) {
-    // TODO: implement getQuery
-    throw UnimplementedError();
+  }) async {
+    final list = <T>[];
+    for (var value in await getAll(parentId: parentId, langCode: langCode)) {
+      if (test(value)) {
+        list.add(value);
+      }
+    }
+    return list;
   }
 
   @override
-  Stream<List<T>> getQueryStream(bool Function(T value) test) {
-    // TODO: implement getQueryStream
-    throw UnimplementedError();
+  Stream<List<T>> getQueryStream(bool Function(T value) test) async* {
+    final list = <T>[];
+    await for (var value in getAllStream()) {
+      if (test(value)) {
+        list.add(value);
+      }
+    }
+    yield list;
   }
 
   @override
@@ -101,7 +141,7 @@ class ChBox<T> extends ChBoxInterfaces<T> {
       final map = _adapter.setId(id, _adapter.toMap(value));
       await _indexDB.add(
         ChapterRecord(
-          id: _adapter.getId(value),
+          id: id,
           adapterId: _adapter.getAdapterId,
           parentId: _adapter.getParentId,
           langCode: _adapter.getLangCode(value),
