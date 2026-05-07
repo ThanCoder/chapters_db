@@ -31,21 +31,21 @@ class ChapterAdapter extends ChAdapter<Chapter> {
   }
 
   @override
-  int get getAdapterId => 1;
+  int get getAdapterId => 1; //adaper unique field id
 
   @override
   int getLangCode(Chapter value) {
-    return value.languageCode;
+    return value.languageCode; //custom language code
   }
 
   @override
   int getChapter(Chapter value) {
-    return value.chapter;
+    return value.chapter; //chapter number
   }
 
   @override
   int getId(Chapter value) {
-    return value.id;
+    return value.id; //chapter auto id
   }
 
   @override
