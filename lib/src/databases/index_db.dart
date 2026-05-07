@@ -89,11 +89,11 @@ class IndexDB {
     // 4. RAM ပေါ်ကနေ ဖယ်ထုတ်မယ်
     _records.remove(id);
 
-    _reIndexRecords();
-
     // 5. Disk ထဲ တကယ်ရောက်အောင် Flush လုပ်မယ်
     if (callFlush) {
       await _writeRaf.flush();
+      await _reIndexRecords();
+      await mabyCompact();
     }
   }
 
@@ -109,10 +109,12 @@ class IndexDB {
     // အားလုံးပြီးမှ Disk ထဲ တခါတည်း ရေးချမယ်
     await _writeRaf.flush();
 
-    _reIndexRecords();
+    await _reIndexRecords();
+
+    await mabyCompact();
   }
 
-  void _reIndexRecords() {
+  Future<void> _reIndexRecords() async {
     _languageOfChild.clear();
     _parentOfChild.clear();
 
