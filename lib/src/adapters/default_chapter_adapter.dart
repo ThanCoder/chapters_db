@@ -1,5 +1,5 @@
 import 'package:chapters_db/chapters_db.dart';
-import 'package:chapters_db/src/modes/default_chapter.dart';
+import 'package:chapters_db/src/models/default_chapter.dart';
 
 class DefaultChapterAdapter extends ChAdapter<DefaultChapter> {
   @override

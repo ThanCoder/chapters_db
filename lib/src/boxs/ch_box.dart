@@ -4,7 +4,7 @@ import 'package:chapters_db/src/adapters/ch_adapter.dart';
 import 'package:chapters_db/src/boxs/ch_box_interfaces.dart';
 import 'package:chapters_db/src/databases/chapter_record.dart';
 import 'package:chapters_db/src/databases/index_db.dart';
-import 'package:chapters_db/src/modes/chapter_info.dart';
+import 'package:chapters_db/src/models/chapter_info.dart';
 
 class ChBox<T> extends ChBoxInterfaces<T, ChapterInfo<T>> {
   final ChAdapter<T> _adapter;

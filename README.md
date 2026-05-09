@@ -4,12 +4,51 @@
 
 ```dart
 final db = ChaptersDB.getInstance();
+db.registerAdapterNotExists<Chapter>(ChapterAdapter());
+
 await db.open('chapters.db');
 
+// await db.compact();
 
+final box = db.getDefaultBox();
+final cBox = db.getBox<Chapter>();
 
+// await box.deleteById(1);
+// await box.deleteById(2);
+
+// await cBox.deleteAll([1,2,5]);
+
+await box.add(
+  DefaultChapter(
+    title: 'one 0',
+    chapterNumber: 1,
+    body: 'default chapter one',
+  ),
+);
+await box.add(
+  DefaultChapter(
+    title: 'two 0',
+    chapterNumber: 2,
+    body: 'default chapter two',
+  ),
+);
+
+await cBox.add(
+  Chapter(title: 'one', chapter: 1, body: 'default chapter one'),
+);
+await cBox.add(
+  Chapter(title: 'two', chapter: 2, body: 'default chapter two'),
+);
+
+print('default box 0');
 for (var ch in await box.getAll()) {
-    print(ch);
+  print(ch);
+  // print('data: ${await ch.getContent()}');
+}
+print('custom box 1');
+for (var ch in await cBox.getAll()) {
+  print(ch);
+  // print('data: ${await ch.getContent()}');
 }
 print('deletedCount: ${db.deletedCount}');
 print('deleteSize: ${db.deleteSize}');
