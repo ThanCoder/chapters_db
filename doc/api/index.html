@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="chapters_db API docs, for the Dart programming language.">
+  <title>chapters_db - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li class="self-crumb">chapters_db package</li>
+  </ol>
+  <div class="self-name">chapters_db</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h1 id="chapters-database">Chapters Database</h1>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final db = ChaptersDB.getInstance();
+db.registerAdapterNotExists&lt;Chapter&gt;(ChapterAdapter());
+
+await db.open('chapters.db');
+
+// await db.compact();
+
+final box = db.getDefaultBox();
+final cBox = db.getBox&lt;Chapter&gt;();
+
+// await box.deleteById(1);
+// await box.deleteById(2);
+
+// await cBox.deleteAll([1,2,5]);
+
+await box.add(
+  DefaultChapter(
+    title: 'one 0',
+    chapterNumber: 1,
+    body: 'default chapter one',
+  ),
+);
+await box.add(
+  DefaultChapter(
+    title: 'two 0',
+    chapterNumber: 2,
+    body: 'default chapter two',
+  ),
+);
+
+await cBox.add(
+  Chapter(title: 'one', chapter: 1, body: 'default chapter one'),
+);
+await cBox.add(
+  Chapter(title: 'two', chapter: 2, body: 'default chapter two'),
+);
+
+print('default box 0');
+for (var ch in await box.getAll()) {
+  print(ch);
+  // print('data: ${await ch.getContent()}');
+}
+print('custom box 1');
+for (var ch in await cBox.getAll()) {
+  print(ch);
+  // print('data: ${await ch.getContent()}');
+}
+print('deletedCount: ${db.deletedCount}');
+print('deleteSize: ${db.deleteSize}');
+
+await db.close();
+</code></pre>
+<h2 id="custom-adapter">Custom Adapter</h2>
+<pre class="language-dart"><code class="language-dart">db.registerAdapterNotExists&lt;Chapter&gt;(ChapterAdapter());
+final box = db.getBox&lt;Chapter&gt;();
+
+class ChapterAdapter extends ChAdapter&lt;Chapter&gt; {
+  @override
+  Chapter fromMap(Map&lt;String, dynamic&gt; map) {
+    return Chapter.fromJson(map);
+  }
+
+  @override
+  int get adapterId =&gt; 1; // 0 is default adapter.custom adapter can start &gt; 1.
+
+  @override
+  int getLangCode(Chapter value) {
+    return value.languageCode;
+  }
+
+  @override
+  int getChapter(Chapter value) {
+    return value.chapter;
+  }
+
+  @override
+  int getId(Chapter value) {
+    return value.id;
+  }
+
+  @override
+  Map&lt;String, dynamic&gt; toMap(Chapter value) {
+    return value.toJson();
+  }
+
+  @override
+  String getTitle(Chapter value) {
+    return value.title;
+  }
+}
+</code></pre>
+<h2 id="chapter-type">Chapter Type</h2>
+<pre class="language-dart"><code class="language-dart">class Chapter {
+  final int id; //auto id
+  final String title;
+  final int chapter;
+  final int languageCode;
+  final String body;
+
+  const Chapter({
+    this.id = -1,
+    required this.title,
+    required this.chapter,
+    required this.languageCode,
+    required this.body,
+  });
+
+  Map&lt;String, dynamic&gt; toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'chapter': chapter,
+      'languageCode': languageCode,
+      'body': body,
+    };
+  }
+
+  factory Chapter.fromJson(Map&lt;String, dynamic&gt; json) {
+    return Chapter(
+      id: json['id'],
+      title: json['title'],
+      chapter: json['chapter'],
+      languageCode: json['languageCode'],
+      body: json['body'],
+    );
+  }
+
+  @override
+  String toString() {
+    return '''Chapter(id: $id, title: $title, chapter: $chapter, languageCode: $languageCode, body: $body)''';
+  }
+}
+
+</code></pre>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="chapters_db">
+  <span class="name"><a href="chapters_db/">chapters_db</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li class="self-crumb">chapters_db package</li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">chapters_db</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="chapters_db/">chapters_db</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    chapters_db
+      0.1.0
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
