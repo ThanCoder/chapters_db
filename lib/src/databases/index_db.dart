@@ -67,9 +67,13 @@ class IndexDB {
 
   Future<void> add(ChapterRecord record, {bool callFlush = true}) async {
     final headerOffset = await record.write(_writeRaf);
-    _records[record.id] = RecordMeta.createFromRecord(record, headerOffset);
+    final meta = RecordMeta.createFromRecord(record, headerOffset);
+    _records[record.id] = meta;
 
-    _reIndexRecords();
+    _languageOfChild.putIfAbsent(meta.langCode, () => []).add(meta);
+    if (meta.parentId != -1) {
+      _parentOfChild.putIfAbsent(meta.parentId, () => []).add(meta);
+    }
 
     // 5. Disk ထဲ တကယ်ရောက်အောင် Flush လုပ်မယ်
     if (callFlush) {
@@ -88,6 +92,8 @@ class IndexDB {
 
     // 4. RAM ပေါ်ကနေ ဖယ်ထုတ်မယ်
     _records.remove(id);
+    _deletedCount++;
+    _deletedSize += record.recordSize;
 
     // 5. Disk ထဲ တကယ်ရောက်အောင် Flush လုပ်မယ်
     if (callFlush) {
@@ -198,7 +204,9 @@ class IndexDB {
     await _readRaf.close();
     await _writeRaf.close();
 
-    await dbFile.rename('${dbFile.path}.bk');
+    if (_config.compactWillCreateBackupFile) {
+      await dbFile.rename('${dbFile.path}.bk');
+    }
     await compactFile.rename(dbFile.path);
 
     await reSetConfig();

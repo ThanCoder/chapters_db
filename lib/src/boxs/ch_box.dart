@@ -1,9 +1,12 @@
-import 'package:chapters_db/src/databases/ch_adapter.dart';
-import 'package:chapters_db/src/databases/ch_box_interfaces.dart';
+import 'dart:convert';
+
+import 'package:chapters_db/src/adapters/ch_adapter.dart';
+import 'package:chapters_db/src/boxs/ch_box_interfaces.dart';
 import 'package:chapters_db/src/databases/chapter_record.dart';
 import 'package:chapters_db/src/databases/index_db.dart';
+import 'package:chapters_db/src/modes/chapter_info.dart';
 
-class ChBox<T> extends ChBoxInterfaces<T> {
+class ChBox<T> extends ChBoxInterfaces<T, ChapterInfo<T>> {
   final ChAdapter<T> _adapter;
   final IndexDB _indexDB;
 
@@ -15,14 +18,21 @@ class ChBox<T> extends ChBoxInterfaces<T> {
   Future<T?> add(T value) async {
     final id = _indexDB.generatedId;
     final map = _adapter.setId(id, _adapter.toMap(value));
+    final adapterId = _adapter.adapterId;
+    final title = utf8.encode(_adapter.getTitle(value));
+    final parentId = _adapter.parentId(value);
+    final langCode = _adapter.getLangCode(value);
+    final chapter = _adapter.getChapter(value);
+    final data = _adapter.encodeData(_adapter.toJson(map));
     await _indexDB.add(
       ChapterRecord(
         id: id,
-        adapterId: _adapter.getAdapterId,
-        parentId: _adapter.getParentId,
-        langCode: _adapter.getLangCode(value),
-        chapter: _adapter.getChapter(value),
-        data: _adapter.encodeData(_adapter.toJson(map)),
+        title: title,
+        adapterId: adapterId,
+        parentId: parentId,
+        langCode: langCode,
+        chapter: chapter,
+        data: data,
       ),
     );
     return _adapter.fromMap(map);
@@ -36,8 +46,9 @@ class ChBox<T> extends ChBoxInterfaces<T> {
       await _indexDB.add(
         ChapterRecord(
           id: id,
-          adapterId: _adapter.getAdapterId,
-          parentId: _adapter.getParentId,
+          title: utf8.encode(_adapter.getTitle(value)),
+          adapterId: _adapter.adapterId,
+          parentId: _adapter.parentId(value),
           langCode: _adapter.getLangCode(value),
           chapter: _adapter.getChapter(value),
           data: _adapter.encodeData(_adapter.toJson(map)),
@@ -65,30 +76,40 @@ class ChBox<T> extends ChBoxInterfaces<T> {
   }
 
   @override
-  Future<List<T>> getAll({int? parentId, int? langCode}) async {
-    final list = <T>[];
+  Future<List<ChapterInfo<T>>> getAll({int? parentId, int? langCode}) async {
+    final list = <ChapterInfo<T>>[];
     for (var meta in _indexDB.getAll(parentId: parentId, langCode: langCode)) {
-      final data = await meta.readData(_indexDB.readRaf);
-      final map = _adapter.fromJson(_adapter.decodeData(data));
-      final value = _adapter.fromMap(_adapter.setId(meta.id, map));
-      list.add(value);
+      if (meta.adapterId != _adapter.adapterId) continue;
+      final ch = ChapterInfo<T>.fromMeta(
+        meta,
+        readRaf: _indexDB.readRaf,
+        adapter: _adapter,
+      );
+      list.add(ch);
     }
     return list;
   }
 
   @override
-  Stream<T> getAllStream({int? parentId, int? langCode}) async* {
+  Stream<ChapterInfo<T>> getAllStream({int? parentId, int? langCode}) async* {
     for (var meta in _indexDB.getAll(parentId: parentId, langCode: langCode)) {
-      final data = await meta.readData(_indexDB.readRaf);
-      final map = _adapter.fromJson(_adapter.decodeData(data));
-      final value = _adapter.fromMap(_adapter.setId(meta.id, map));
-      yield value;
+      if (meta.adapterId != _adapter.adapterId) continue;
+      final ch = ChapterInfo<T>.fromMeta(
+        meta,
+        readRaf: _indexDB.readRaf,
+        adapter: _adapter,
+      );
+      yield ch;
     }
   }
 
   @override
-  Future<T?> getOne(bool Function(T value) test) async {
-    for (var value in await getAll()) {
+  Future<ChapterInfo<T>?> getOne(
+    bool Function(ChapterInfo<T> value) test, {
+    int? parentId,
+    int? langCode,
+  }) async {
+    for (var value in await getAll(parentId: parentId, langCode: langCode)) {
       if (test(value)) {
         return value;
       }
@@ -97,8 +118,15 @@ class ChBox<T> extends ChBoxInterfaces<T> {
   }
 
   @override
-  Stream<T?> getOneStream(bool Function(T value) test) async* {
-    await for (var value in getAllStream()) {
+  Stream<ChapterInfo<T>?> getOneStream(
+    bool Function(ChapterInfo<T> value) test, {
+    int? parentId,
+    int? langCode,
+  }) async* {
+    await for (var value in getAllStream(
+      parentId: parentId,
+      langCode: langCode,
+    )) {
       if (test(value)) {
         yield value;
       }
@@ -107,12 +135,12 @@ class ChBox<T> extends ChBoxInterfaces<T> {
   }
 
   @override
-  Future<List<T>> getQuery(
-    bool Function(T value) test, {
+  Future<List<ChapterInfo<T>>> getQuery(
+    bool Function(ChapterInfo<T> value) test, {
     int? parentId,
     int? langCode,
   }) async {
-    final list = <T>[];
+    final list = <ChapterInfo<T>>[];
     for (var value in await getAll(parentId: parentId, langCode: langCode)) {
       if (test(value)) {
         list.add(value);
@@ -122,8 +150,12 @@ class ChBox<T> extends ChBoxInterfaces<T> {
   }
 
   @override
-  Stream<List<T>> getQueryStream(bool Function(T value) test) async* {
-    final list = <T>[];
+  Stream<List<ChapterInfo<T>>> getQueryStream(
+    bool Function(ChapterInfo<T> value) test, {
+    int? parentId,
+    int? langCode,
+  }) async* {
+    final list = <ChapterInfo<T>>[];
     await for (var value in getAllStream()) {
       if (test(value)) {
         list.add(value);
@@ -142,8 +174,9 @@ class ChBox<T> extends ChBoxInterfaces<T> {
       await _indexDB.add(
         ChapterRecord(
           id: id,
-          adapterId: _adapter.getAdapterId,
-          parentId: _adapter.getParentId,
+          title: utf8.encode(_adapter.getTitle(value)),
+          adapterId: _adapter.adapterId,
+          parentId: _adapter.parentId(value),
           langCode: _adapter.getLangCode(value),
           chapter: _adapter.getChapter(value),
           data: _adapter.encodeData(_adapter.toJson(map)),

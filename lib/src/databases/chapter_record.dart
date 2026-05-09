@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:chapters_db/src/databases/record_meta.dart';
 
 class ChapterRecord {
-  //header() -> [flag(1),id(8),adapterId(1),parentId(8),langCode(4),chapter(4),dataSize(4)]
-  static final headerSize = 30;
+  //header() -> [status(1),id(8),adapterId(1),parentId(8),langCode(4),chapter(4),dataSize(4),titleSize(4)]
+  static final headerSize = 34;
 
   final RecordStatus status;
   final int id;
@@ -13,6 +13,7 @@ class ChapterRecord {
   final int parentId;
   final int langCode;
   final int chapter;
+  final Uint8List title;
   final Uint8List data;
 
   const ChapterRecord({
@@ -21,12 +22,15 @@ class ChapterRecord {
     this.adapterId = -1,
     this.parentId = -1,
     this.langCode = 0,
+    required this.title,
     required this.chapter,
     required this.data,
   });
-
+  //header() -> [status(1),id(8),adapterId(1),parentId(8),langCode(4),chapter(4),dataSize(4),titleSize(4)]
   Future<int> write(RandomAccessFile raf) async {
     final offset = await raf.position();
+
+    // print('write adapterId: $adapterId');
 
     final header = ByteData(headerSize);
     header.setUint8(0, status.index);
@@ -36,10 +40,12 @@ class ChapterRecord {
     header.setInt32(18, langCode, Endian.big);
     header.setInt32(22, chapter, Endian.big);
     header.setInt32(26, data.length, Endian.big);
+    header.setInt32(30, title.length);
 
     final builder = BytesBuilder(copy: false);
     //add
     builder.add(header.buffer.asUint8List());
+    builder.add(title);
     builder.add(data);
 
     await raf.writeFrom(builder.takeBytes());

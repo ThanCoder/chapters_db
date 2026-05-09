@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -13,6 +14,8 @@ class RecordMeta {
   final int parentId;
   final int langCode;
   final int chapter;
+  final String title;
+  final int titleSize;
   final int dataSize;
   final int recordSize;
   final RecordStatus status;
@@ -25,29 +28,34 @@ class RecordMeta {
     required this.parentId,
     required this.langCode,
     required this.chapter,
+    required this.title,
+    required this.titleSize,
     required this.dataSize,
     required this.recordSize,
     required this.status,
   });
 
   factory RecordMeta.createFromRecord(ChapterRecord record, int offset) {
+    final title = utf8.decode(record.title);
     return RecordMeta(
       offset: offset,
-      dataStartOffset: ChapterRecord.headerSize + offset,
+      dataStartOffset: offset + ChapterRecord.headerSize + record.title.length,
       id: record.id,
       adapterId: record.adapterId,
       parentId: record.parentId,
       langCode: record.langCode,
       chapter: record.chapter,
+      title: title,
+      titleSize: title.length,
       dataSize: record.data.length,
-      recordSize: ChapterRecord.headerSize + record.data.length,
+      recordSize:
+          ChapterRecord.headerSize + record.title.length + record.data.length,
       status: record.status,
     );
   }
 
   Future<Uint8List> readData(RandomAccessFile raf) async {
     await raf.setPosition(dataStartOffset);
-
     final data = await raf.read(dataSize);
     return data;
   }
@@ -62,7 +70,7 @@ class RecordMeta {
   }
 
   // ---- static ----
-
+  //header() -> [status(1),id(8),adapterId(1),parentId(8),langCode(4),chapter(4),dataSize(4),titleSize(4)]
   static Future<RecordMeta> read(RandomAccessFile raf) async {
     final offset = await raf.position();
 
@@ -74,17 +82,22 @@ class RecordMeta {
     final header = ByteData.sublistView(headerBytes);
     final flag = header.getUint8(0);
     final id = header.getInt64(1, Endian.big);
-    final adapterId = header.getInt8(2);
+    final adapterId = header.getInt8(9);
     final parentId = header.getInt64(10, Endian.big);
     final langCode = header.getInt32(18, Endian.big);
     final chapter = header.getInt32(22, Endian.big);
     final dataSize = header.getInt32(26, Endian.big);
+    final titleSize = header.getInt32(30, Endian.big);
+    // chapter title
+    final title = utf8.decode(await raf.read(titleSize));
 
-    final dataStartOffset = offset + ChapterRecord.headerSize;
+    final dataStartOffset = offset + ChapterRecord.headerSize + titleSize;
     // skip data
     await raf.setPosition(dataStartOffset + dataSize);
 
-    final recordSize = ChapterRecord.headerSize + dataSize;
+    final recordSize = ChapterRecord.headerSize + titleSize + dataSize;
+
+    // print('read adapterId: $adapterId');
 
     return RecordMeta(
       offset: offset,
@@ -95,8 +108,10 @@ class RecordMeta {
       parentId: parentId,
       langCode: langCode,
       chapter: chapter,
+      titleSize: titleSize,
       dataSize: dataSize,
       recordSize: recordSize,
+      title: title,
     );
   }
 }

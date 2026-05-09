@@ -6,11 +6,7 @@
 final db = ChaptersDB.getInstance();
 await db.open('chapters.db');
 
-db.registerAdapterNotExists<Chapter>(ChapterAdapter());
 
-final box = db.getBox<Chapter>();
-
-// await box.deleteAll([1,2]);
 
 for (var ch in await box.getAll()) {
     print(ch);
@@ -21,9 +17,12 @@ print('deleteSize: ${db.deleteSize}');
 await db.close();
 ```
 
-## Adapter
+## Custom Adapter
 
 ```dart
+db.registerAdapterNotExists<Chapter>(ChapterAdapter());
+final box = db.getBox<Chapter>();
+
 class ChapterAdapter extends ChAdapter<Chapter> {
   @override
   Chapter fromMap(Map<String, dynamic> map) {
@@ -31,26 +30,31 @@ class ChapterAdapter extends ChAdapter<Chapter> {
   }
 
   @override
-  int get getAdapterId => 1; //adaper unique field id
+  int get adapterId => 1; // 0 is default adapter.custom adapter can start > 1.
 
   @override
   int getLangCode(Chapter value) {
-    return value.languageCode; //custom language code
+    return value.languageCode;
   }
 
   @override
   int getChapter(Chapter value) {
-    return value.chapter; //chapter number
+    return value.chapter;
   }
 
   @override
   int getId(Chapter value) {
-    return value.id; //chapter auto id
+    return value.id;
   }
 
   @override
   Map<String, dynamic> toMap(Chapter value) {
     return value.toJson();
+  }
+
+  @override
+  String getTitle(Chapter value) {
+    return value.title;
   }
 }
 ```
