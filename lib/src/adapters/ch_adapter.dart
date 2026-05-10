@@ -43,5 +43,5 @@ abstract class ChAdapter<T> {
   // encoder
   Uint8List encodeData(String jsonSource) =>
       Uint8List.fromList(gzip.encode(utf8.encode(jsonSource)));
-  String decodeData(Uint8List dataBytes) => utf8.decode(zlib.decode(dataBytes));
+  String decodeData(Uint8List dataBytes) => utf8.decode(gzip.decode(dataBytes));
 }

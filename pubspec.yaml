@@ -1,6 +1,6 @@
 name: chapters_db
 description: Create For Chapters Database.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/ThanCoder/chapters_db
 
 environment:
