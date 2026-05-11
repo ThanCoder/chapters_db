@@ -1,5 +1,11 @@
 # Chapters Database
 
+## Platform Support
+
+| Android | iOS | Windows | macOS | Linux |
+| :-----: | :-: | :-----: | :---: | :---: |
+|   ✅    | ✅  |   ✅    |  ✅   |  ✅   |
+
 ## Example
 
 ```dart
