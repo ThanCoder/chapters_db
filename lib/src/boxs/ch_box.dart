@@ -6,10 +6,12 @@ import 'package:chapters_db/src/databases/chapter_record.dart';
 import 'package:chapters_db/src/databases/index_db.dart';
 import 'package:chapters_db/src/models/chapter_info.dart';
 
+///Record Box Manager Class
 class ChBox<T> extends ChBoxInterfaces<T, ChapterInfo<T>> {
   final ChAdapter<T> _adapter;
   final IndexDB _indexDB;
 
+  ///init
   ChBox({required ChAdapter<T> adapter, required IndexDB indexDB})
     : _adapter = adapter,
       _indexDB = indexDB;

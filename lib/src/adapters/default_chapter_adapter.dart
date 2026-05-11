@@ -1,5 +1,6 @@
 import 'package:chapters_db/chapters_db.dart';
 
+///default adapter
 class DefaultChapterAdapter extends ChAdapter<DefaultChapter> {
   @override
   int get adapterId => 0;

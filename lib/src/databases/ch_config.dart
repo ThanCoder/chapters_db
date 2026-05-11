@@ -1,3 +1,4 @@
+/// Database Config Class
 class ChConfig {
   ///
   /// ### `bool Function(int deleteCount, int deleteSize)`
@@ -9,6 +10,7 @@ class ChConfig {
   ///
   final bool compactWillCreateBackupFile;
 
+  ///init
   const ChConfig({
     required this.willCompact,
     required this.compactWillCreateBackupFile,
