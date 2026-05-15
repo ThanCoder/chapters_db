@@ -1,5 +1,11 @@
 ///Inferface for ChBox`<T>`
-abstract class ChBoxInterfaces<T, R> {
+abstract class ChBoxCrud<T, R> {
+  /// get all records
+  int get allCount;
+
+  /// get all count with params.
+  int getAllCount({int? parentId, int? langCode});
+
   ///
   /// ### Add Single
   ///

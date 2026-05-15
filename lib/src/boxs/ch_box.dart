@@ -1,13 +1,13 @@
 import 'dart:convert';
 
 import 'package:chapters_db/src/adapters/ch_adapter.dart';
-import 'package:chapters_db/src/boxs/ch_box_interfaces.dart';
+import 'package:chapters_db/src/boxs/ch_box_crud.dart';
 import 'package:chapters_db/src/databases/chapter_record.dart';
 import 'package:chapters_db/src/databases/index_db.dart';
 import 'package:chapters_db/src/models/chapter_info.dart';
 
 ///Record Box Manager Class
-class ChBox<T> extends ChBoxInterfaces<T, ChapterInfo<T>> {
+class ChBox<T> extends ChBoxCrud<T, ChapterInfo<T>> {
   final ChAdapter<T> _adapter;
   final IndexDB _indexDB;
 
@@ -15,6 +15,13 @@ class ChBox<T> extends ChBoxInterfaces<T, ChapterInfo<T>> {
   ChBox({required ChAdapter<T> adapter, required IndexDB indexDB})
     : _adapter = adapter,
       _indexDB = indexDB;
+
+  @override
+  int get allCount => _indexDB.getAllCount();
+
+  @override
+  int getAllCount({int? parentId, int? langCode}) =>
+      _indexDB.getAllCount(parentId: parentId, langCode: langCode);
 
   @override
   Future<T?> add(T value) async {

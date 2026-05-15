@@ -3,8 +3,9 @@ import 'dart:typed_data';
 
 import 'package:chapters_db/src/databases/record_meta.dart';
 
+/// Add Record
 class ChapterRecord {
-  //header() -> [status(1),id(8),adapterId(1),parentId(8),langCode(4),chapter(4),dataSize(4),titleSize(4)]
+  /// header() -> [status(1),id(8),adapterId(1),parentId(8),langCode(4),chapter(4),dataSize(4),titleSize(4)]
   static final headerSize = 34;
 
   final RecordStatus status;

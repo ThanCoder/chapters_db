@@ -5,12 +5,15 @@ import 'package:chapters_db/src/databases/ch_config.dart';
 import 'package:chapters_db/src/databases/chapter_record.dart';
 import 'package:chapters_db/src/databases/record_meta.dart';
 
+/// internal main db class
 class IndexDB {
+  /// opened db file
   late File dbFile;
   late RandomAccessFile _writeRaf;
   late RandomAccessFile _readRaf;
   late ChConfig _config;
 
+  /// read raf
   RandomAccessFile get readRaf => _readRaf;
 
   int _lastId = 0;
@@ -20,19 +23,32 @@ class IndexDB {
   final Map<int, RecordMeta> _records = {};
   final Map<int, List<RecordMeta>> _parentOfChild = {};
   final Map<int, List<RecordMeta>> _languageOfChild = {};
+
+  /// all records
   Map<int, RecordMeta> get records => _records;
+
+  /// parent ရဲ့ list
   Map<int, List<RecordMeta>> get parentOfChild => _parentOfChild;
+
+  /// laguage ရဲ့ list
   Map<int, List<RecordMeta>> get languageOfChild => _languageOfChild;
 
+  /// last id
   int get lastId => _lastId;
+
+  /// delete count
   int get deletedCount => _deletedCount;
+
+  /// delete size
   int get deleteSize => _deletedSize;
 
+  ///set config
   void setConfig(String dbPath, {required ChConfig config}) {
     dbFile = File(dbPath);
     _config = config;
   }
 
+  /// load database
   Future<void> load() async {
     // if (!dbFile.existsSync()) {
     //   // မရှိရင်
@@ -65,6 +81,7 @@ class IndexDB {
     }
   }
 
+  /// add
   Future<void> add(ChapterRecord record, {bool callFlush = true}) async {
     final headerOffset = await record.write(_writeRaf);
     final meta = RecordMeta.createFromRecord(record, headerOffset);
@@ -81,6 +98,7 @@ class IndexDB {
     }
   }
 
+  /// delete by id
   Future<void> deleteById(int id, {bool callFlush = true}) async {
     final record = records[id];
 
@@ -103,6 +121,7 @@ class IndexDB {
     }
   }
 
+  /// delete database
   Future<void> deleteMultiple(List<int> ids) async {
     for (final id in ids) {
       try {
@@ -132,21 +151,32 @@ class IndexDB {
     }
   }
 
+  /// Get All Records
   Iterable<RecordMeta> getAll({int? parentId, int? langCode}) {
-    if (parentId != null) {
-      return _parentOfChild[parentId] ?? [];
-    }
-    if (langCode != null) {
-      return _languageOfChild[langCode] ?? [];
-    }
-    return _records.values;
+    // logic ကို functional approach နဲ့ ရေးတာ ပိုရှင်းပါတယ်
+    return _records.values.where((meta) {
+      // parentId ပေးထားရင် ကိုက်ညီရမယ်
+      final matchParent = parentId == null || meta.parentId == parentId;
+
+      // adapterTypId ပေးထားရင် ကိုက်ညီရမယ်
+      final matchAdapter = langCode == null || meta.langCode == langCode;
+
+      return matchParent && matchAdapter;
+    });
   }
 
+  /// get all record count
+  int getAllCount({int? parentId, int? langCode}) {
+    return getAll(parentId: parentId, langCode: langCode).length;
+  }
+
+  /// generated id
   int get generatedId {
     _lastId++;
     return _lastId;
   }
 
+  /// is Database Opened
   bool get isOpened {
     try {
       _readRaf;
@@ -157,11 +187,13 @@ class IndexDB {
     }
   }
 
+  /// make sure write disk
   Future<void> writeFlush() async {
     if (!isOpened) return;
     await _writeRaf.flush();
   }
 
+  /// clse database
   Future<void> close() async {
     await _writeRaf.close();
     await _readRaf.close();
@@ -175,6 +207,7 @@ class IndexDB {
     }
   }
 
+  /// database clean
   Future<void> compact() async {
     if (deletedCount == 0) return;
 
@@ -214,6 +247,7 @@ class IndexDB {
     await load();
   }
 
+  /// db cache reset
   Future<void> reSetConfig() async {
     _lastId = 0;
     _deletedCount = 0;
