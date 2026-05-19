@@ -42,6 +42,8 @@ class IndexDB {
   /// delete size
   int get deleteSize => _deletedSize;
 
+  bool _isOpened = false;
+
   ///set config
   void setConfig(String dbPath, {required ChConfig config}) {
     dbFile = File(dbPath);
@@ -50,20 +52,18 @@ class IndexDB {
 
   /// load database
   Future<void> load() async {
-    // if (!dbFile.existsSync()) {
-    //   // မရှိရင်
-    // }
-    _writeRaf = await dbFile.open(mode: FileMode.append);
-    _readRaf = await dbFile.open(mode: FileMode.read);
+    _writeRaf = dbFile.openSync(mode: FileMode.append);
+    _readRaf = dbFile.openSync(mode: FileMode.read);
 
-    await _buildIndex();
+    _buildIndex();
+    _isOpened = true;
   }
 
-  Future<void> _buildIndex() async {
-    final size = await _readRaf.length();
+  void _buildIndex() {
+    final size = _readRaf.lengthSync();
 
-    while (await _readRaf.position() < size) {
-      final meta = await RecordMeta.read(_readRaf);
+    while (_readRaf.positionSync() < size) {
+      final meta = RecordMeta.read(_readRaf);
       if (meta.status == RecordStatus.active) {
         _records[meta.id] = meta;
         // print('lang: ${meta.langCode}');
@@ -178,13 +178,7 @@ class IndexDB {
 
   /// is Database Opened
   bool get isOpened {
-    try {
-      _readRaf;
-      _writeRaf;
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return _isOpened;
   }
 
   /// make sure write disk
@@ -197,6 +191,7 @@ class IndexDB {
   Future<void> close() async {
     await _writeRaf.close();
     await _readRaf.close();
+    _isOpened = false;
   }
 
   ///// ----- Compact -----

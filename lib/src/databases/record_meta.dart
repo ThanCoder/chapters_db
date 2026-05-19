@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:chapters_db/src/databases/chapter_record.dart';
 
+/// status
 enum RecordStatus { delete, active }
 
 class RecordMeta {
@@ -54,12 +55,14 @@ class RecordMeta {
     );
   }
 
+  /// read data
   Future<Uint8List> readData(RandomAccessFile raf) async {
     await raf.setPosition(dataStartOffset);
     final data = await raf.read(dataSize);
     return data;
   }
 
+  /// write delete mark
   Future<void> deleteMark(RandomAccessFile raf) async {
     await raf.setPosition(offset);
     // delete
@@ -71,10 +74,11 @@ class RecordMeta {
 
   // ---- static ----
   //header() -> [status(1),id(8),adapterId(1),parentId(8),langCode(4),chapter(4),dataSize(4),titleSize(4)]
-  static Future<RecordMeta> read(RandomAccessFile raf) async {
-    final offset = await raf.position();
+  /// Read Meta
+  static RecordMeta read(RandomAccessFile raf) {
+    final offset = raf.positionSync();
 
-    final headerBytes = await raf.read(ChapterRecord.headerSize);
+    final headerBytes = raf.readSync(ChapterRecord.headerSize);
     if (headerBytes.length < ChapterRecord.headerSize) {
       throw Exception("Header missing");
     }
@@ -89,11 +93,11 @@ class RecordMeta {
     final dataSize = header.getInt32(26, Endian.big);
     final titleSize = header.getInt32(30, Endian.big);
     // chapter title
-    final title = utf8.decode(await raf.read(titleSize));
+    final title = utf8.decode(raf.readSync(titleSize));
 
     final dataStartOffset = offset + ChapterRecord.headerSize + titleSize;
     // skip data
-    await raf.setPosition(dataStartOffset + dataSize);
+    raf.setPositionSync(dataStartOffset + dataSize);
 
     final recordSize = ChapterRecord.headerSize + titleSize + dataSize;
 
