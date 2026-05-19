@@ -4,7 +4,7 @@ description: >-
   supporting custom type adapters, multiple box instances, and efficient 
   asynchronous data persistence.
 version: 0.5.0
-repository: https://github.com/ThanCoder/chapters_db
+repository: https://github.com/ThanCoder/chapters_db.git
 
 environment:
   sdk: ^3.11.0
