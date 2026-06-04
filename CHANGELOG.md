@@ -1,4 +1,7 @@
-# 0.5.0
+# 0.6.1
+- Fixed -> Fixed Some Error.
+
+## 0.5.0
 
 - Speed Up -> Speed Up Read Meta.
 
