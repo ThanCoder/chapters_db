@@ -1,4 +1,7 @@
-# 0.6.1
+# 0.7.2
+- Fixed -> Fixed Some Error.
+
+## 0.6.1
 - Fixed -> Fixed Some Error.
 
 ## 0.5.0
